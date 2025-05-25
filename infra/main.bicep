@@ -98,7 +98,6 @@ module web 'services/web.bicep' = {
   scope: rg
 }
 
-//#if (UsePostgreSQL)
 module pgsqldatabase 'core/database/postgresql/flexibleserver.bicep' = {
   name: 'pgsql-database'
   params: {
@@ -124,24 +123,7 @@ module pgsqldatabase 'core/database/postgresql/flexibleserver.bicep' = {
   }
   scope: rg
 }
-//#endif
 
-//#if (UseSqlServer)
-module database 'core/database/sqlserver/sqlserver.bicep' = {
-  name: 'database'
-  params: {
-    name: !empty(dbServerName) ? dbServerName : '${abbrs.sqlServers}${resourceToken}'
-    location: location
-    tags: tags
-    databaseName: !empty(dbName) ? dbName : '${abbrs.sqlServersDatabases}${resourceToken}'
-    keyVaultName: keyVault.outputs.name
-    connectionStringKey: 'ConnectionStrings--CleanArchitectureDb'
-    sqlAdminPassword: dbAdminPassword
-    appUserPassword: dbAppUserPassword
-  }
-  scope: rg
-}
-//#endif
 
 module webKeyVaultAccess 'core/security/keyvault-access.bicep' = {
   name: 'webKeyVaultAccess'
@@ -165,10 +147,5 @@ output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
 output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString
-//#if (UseSqlServer)
-output AZURE_SQL_CONNECTION_STRING_KEY string = database.outputs.connectionStringKey
-//#endif
-//#if (UsePostgreSQL)
 output AZURE_PSQL_CONNECTION_STRING_KEY string = pgsqldatabase.outputs.connectionStringKey
-//#endif
 output WEB_BASE_URI string = web.outputs.uri

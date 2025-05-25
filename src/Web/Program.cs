@@ -3,9 +3,6 @@ using CleanArchitecture.Infrastructure.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-#if (UseAspire)
-builder.AddServiceDefaults();
-#endif
 builder.AddKeyVaultIfConfigured();
 builder.AddApplicationServices();
 builder.AddInfrastructureServices();
@@ -24,9 +21,7 @@ else
     app.UseHsts();
 }
 
-#if (!UseAspire)
 app.UseHealthChecks("/health");
-#endif
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -36,21 +31,13 @@ app.UseSwaggerUi(settings =>
     settings.DocumentPath = "/api/specification.json";
 });
 
-#if (!UseApiOnly)
 app.MapRazorPages();
 
 app.MapFallbackToFile("index.html");
-#endif
 
 app.UseExceptionHandler(options => { });
 
-#if (UseApiOnly)
-app.Map("/", () => Results.Redirect("/api"));
-#endif
 
-#if (UseAspire)
-app.MapDefaultEndpoints();
-#endif
 app.MapEndpoints();
 
 app.Run();

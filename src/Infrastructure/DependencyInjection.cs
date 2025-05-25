@@ -24,44 +24,18 @@ public static class DependencyInjection
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-#if (UsePostgreSQL)
             options.UseNpgsql(connectionString).AddAsyncSeeding(sp);
-#elif (UseSqlite)
-            options.UseSqlite(connectionString).AddAsyncSeeding(sp);
-#else
-            options.UseSqlServer(connectionString).AddAsyncSeeding(sp);
-#endif
         });
 
-#if (UseAspire)
-#if (UsePostgreSQL)
-        builder.EnrichNpgsqlDbContext<ApplicationDbContext>();
-#elif (UseSqlServer)
-        builder.EnrichSqlServerDbContext<ApplicationDbContext>();
-#endif
-#endif
 
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
-#if (UseApiOnly)
-        builder.Services.AddAuthentication()
-            .AddBearerToken(IdentityConstants.BearerScheme);
-
-        builder.Services.AddAuthorizationBuilder();
-
-        builder.Services
-            .AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddApiEndpoints();
-#else
         builder.Services
             .AddDefaultIdentity<ApplicationUser>()
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
-#endif
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();

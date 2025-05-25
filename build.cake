@@ -1,15 +1,11 @@
-// #if (!UseApiOnly)
 #addin nuget:?package=Cake.Npm&version=4.0.0
-// #endif
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var webServerPath = "./src/Web";
 var webClientPath = "./src/Web/ClientApp";
 var webUrl = "https://localhost:5001/";
-// #if (!UseApiOnly)
 webUrl = "https://localhost:44447/";
-// #endif
 
 IProcess webProcess = null;
 
@@ -19,14 +15,12 @@ Task("Build")
         DotNetBuild("./CleanArchitecture.sln", new DotNetBuildSettings {
             Configuration = configuration
         });
-// #if (!UseApiOnly)
         if (DirectoryExists(webClientPath)) {
             Information("Installing client app dependencies...");
             NpmInstall(settings => settings.WorkingDirectory = webClientPath);
             Information("Building client app...");
             NpmRunScript("build", settings => settings.WorkingDirectory = webClientPath);
         }
-// #endif
     });
 
 Task("Run")
@@ -79,11 +73,9 @@ Task("Test")
             NoBuild = true
         };
 
-// #if (!UseApiOnly)
         if (target == "Basic") {
             testSettings.Filter = "FullyQualifiedName!~AcceptanceTests";
         }
-// #endif
 
         DotNetTest("./CleanArchitecture.sln", testSettings);
     });
