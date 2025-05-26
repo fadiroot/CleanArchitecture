@@ -5,23 +5,24 @@ using CleanArchitecture.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace CleanArchitecture.Infrastructure.Data;
-
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
+namespace CleanArchitecture.Infrastructure.Data
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-
-    public DbSet<TodoList> TodoLists => Set<TodoList>();
-
-    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
-    public DbSet<Level> Levels => Set<Level>();
-    public DbSet<Subject> Subjects => Set<Subject>();
-    public DbSet<Chapter> Chapters => Set<Chapter>();
-    public DbSet<Exercise> Exercises => Set<Exercise>();
-
-    protected override void OnModelCreating(ModelBuilder builder)
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
     {
-        base.OnModelCreating(builder);
-        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+
+        public DbSet<TodoList> TodoLists => Set<TodoList>();
+
+        public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+        public DbSet<Level> Levels => Set<Level>();
+        public DbSet<Subject> Subjects => Set<Subject>();
+        public DbSet<Chapter> Chapters => Set<Chapter>();
+        public DbSet<Exercise> Exercises => Set<Exercise>();
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        }
     }
 }

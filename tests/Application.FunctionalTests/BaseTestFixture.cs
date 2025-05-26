@@ -1,13 +1,14 @@
-﻿namespace CleanArchitecture.Application.FunctionalTests;
-
-using static Testing;
-
-[TestFixture]
-public abstract class BaseTestFixture
+﻿namespace CleanArchitecture.Application.FunctionalTests
 {
-    [SetUp]
-    public async Task TestSetUp()
+    using static Testing;
+
+    [TestFixture]
+    public abstract class BaseTestFixture
     {
-        await ResetState();
+        [SetUp]
+        public async Task TestSetUp()
+        {
+            await ResetState();
+        }
     }
 }

@@ -1,19 +1,20 @@
 ﻿using CleanArchitecture.Domain.Entities;
 
-namespace CleanArchitecture.Application.Common.Models;
-
-public class LookupDto
+namespace CleanArchitecture.Application.Common.Models
 {
-    public int Id { get; init; }
-
-    public string? Title { get; init; }
-
-    private class Mapping : Profile
+    public class LookupDto
     {
-        public Mapping()
+        public int Id { get; init; }
+
+        public string? Title { get; init; }
+
+        private class Mapping : Profile
         {
-            CreateMap<TodoList, LookupDto>();
-            CreateMap<TodoItem, LookupDto>();
+            public Mapping()
+            {
+                CreateMap<TodoList, LookupDto>();
+                CreateMap<TodoItem, LookupDto>();
+            }
         }
     }
 }

@@ -9,38 +9,39 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace Microsoft.Extensions.DependencyInjection;
-
-public static class DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection
 {
-    public static void AddInfrastructureServices(this IHostApplicationBuilder builder)
+    public static class DependencyInjection
     {
-        var connectionString = builder.Configuration.GetConnectionString("CleanArchitectureDb");
-        Guard.Against.Null(connectionString, message: "Connection string 'CleanArchitectureDb' not found.");
-
-        builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
-        builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
-
-        builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        public static void AddInfrastructureServices(this IHostApplicationBuilder builder)
         {
-            options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-            options.UseNpgsql(connectionString).AddAsyncSeeding(sp);
-        });
+            var connectionString = builder.Configuration.GetConnectionString("CleanArchitectureDb");
+            Guard.Against.Null(connectionString, message: "Connection string 'CleanArchitectureDb' not found.");
+
+            builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
+            builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
+
+            builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+            {
+                options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+                options.UseNpgsql(connectionString).AddAsyncSeeding(sp);
+            });
 
 
-        builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+            builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
-        builder.Services.AddScoped<ApplicationDbContextInitialiser>();
+            builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
-        builder.Services
-            .AddDefaultIdentity<ApplicationUser>()
-            .AddRoles<IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>();
+            builder.Services
+                .AddDefaultIdentity<ApplicationUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
 
-        builder.Services.AddSingleton(TimeProvider.System);
-        builder.Services.AddTransient<IIdentityService, IdentityService>();
+            builder.Services.AddSingleton(TimeProvider.System);
+            builder.Services.AddTransient<IIdentityService, IdentityService>();
 
-        builder.Services.AddAuthorization(options =>
-            options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
+            builder.Services.AddAuthorization(options =>
+                options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
+        }
     }
 }

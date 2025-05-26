@@ -2,39 +2,40 @@
 using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Domain.Events;
 
-namespace CleanArchitecture.Application.TodoItems.Commands.CreateTodoItem;
-
-public record CreateTodoItemCommand : IRequest<int>
+namespace CleanArchitecture.Application.TodoItems.Commands.CreateTodoItem
 {
-    public int ListId { get; init; }
-
-    public string? Title { get; init; }
-}
-
-public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemCommand, int>
-{
-    private readonly IApplicationDbContext _context;
-
-    public CreateTodoItemCommandHandler(IApplicationDbContext context)
+    public record CreateTodoItemCommand : IRequest<int>
     {
-        _context = context;
+        public int ListId { get; init; }
+
+        public string? Title { get; init; }
     }
 
-    public async Task<int> Handle(CreateTodoItemCommand request, CancellationToken cancellationToken)
+    public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemCommand, int>
     {
-        var entity = new TodoItem
+        private readonly IApplicationDbContext _context;
+
+        public CreateTodoItemCommandHandler(IApplicationDbContext context)
         {
-            ListId = request.ListId,
-            Title = request.Title,
-            Done = false
-        };
+            _context = context;
+        }
 
-        entity.AddDomainEvent(new TodoItemCreatedEvent(entity));
+        public async Task<int> Handle(CreateTodoItemCommand request, CancellationToken cancellationToken)
+        {
+            var entity = new TodoItem
+            {
+                ListId = request.ListId,
+                Title = request.Title,
+                Done = false
+            };
 
-        _context.TodoItems.Add(entity);
+            entity.AddDomainEvent(new TodoItemCreatedEvent(entity));
 
-        await _context.SaveChangesAsync(cancellationToken);
+            _context.TodoItems.Add(entity);
 
-        return entity.Id;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return entity.Id;
+        }
     }
 }

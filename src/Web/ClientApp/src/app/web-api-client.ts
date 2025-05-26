@@ -15,6 +15,76 @@ import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angula
 
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
+export interface ILevelsClient {
+    createLevel(command: CreateLevelCommand): Observable<Level>;
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+export class LevelsClient implements ILevelsClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    createLevel(command: CreateLevelCommand): Observable<Level> {
+        let url_ = this.baseUrl + "/api/Levels";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(command);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreateLevel(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreateLevel(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<Level>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<Level>;
+        }));
+    }
+
+    protected processCreateLevel(response: HttpResponseBase): Observable<Level> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result201 = Level.fromJS(resultData201);
+            return _observableOf(result201);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
 export interface ITodoItemsClient {
     getTodoItemsWithPagination(listId: number, pageNumber: number, pageSize: number): Observable<PaginatedListOfTodoItemBriefDto>;
     createTodoItem(command: CreateTodoItemCommand): Observable<number>;
@@ -602,6 +672,363 @@ export class WeatherForecastsClient implements IWeatherForecastsClient {
         }
         return _observableOf(null as any);
     }
+}
+
+export abstract class BaseEntity implements IBaseEntity {
+    id?: number;
+    domainEvents?: BaseEvent[];
+
+    constructor(data?: IBaseEntity) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            if (Array.isArray(_data["domainEvents"])) {
+                this.domainEvents = [] as any;
+                for (let item of _data["domainEvents"])
+                    this.domainEvents!.push(BaseEvent.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): BaseEntity {
+        data = typeof data === 'object' ? data : {};
+        throw new Error("The abstract class 'BaseEntity' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        if (Array.isArray(this.domainEvents)) {
+            data["domainEvents"] = [];
+            for (let item of this.domainEvents)
+                data["domainEvents"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IBaseEntity {
+    id?: number;
+    domainEvents?: BaseEvent[];
+}
+
+export abstract class BaseAuditableEntity extends BaseEntity implements IBaseAuditableEntity {
+    created?: Date;
+    createdBy?: string | undefined;
+    lastModified?: Date;
+    lastModifiedBy?: string | undefined;
+
+    constructor(data?: IBaseAuditableEntity) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.created = _data["created"] ? new Date(_data["created"].toString()) : <any>undefined;
+            this.createdBy = _data["createdBy"];
+            this.lastModified = _data["lastModified"] ? new Date(_data["lastModified"].toString()) : <any>undefined;
+            this.lastModifiedBy = _data["lastModifiedBy"];
+        }
+    }
+
+    static override fromJS(data: any): BaseAuditableEntity {
+        data = typeof data === 'object' ? data : {};
+        throw new Error("The abstract class 'BaseAuditableEntity' cannot be instantiated.");
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["created"] = this.created ? this.created.toISOString() : <any>undefined;
+        data["createdBy"] = this.createdBy;
+        data["lastModified"] = this.lastModified ? this.lastModified.toISOString() : <any>undefined;
+        data["lastModifiedBy"] = this.lastModifiedBy;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IBaseAuditableEntity extends IBaseEntity {
+    created?: Date;
+    createdBy?: string | undefined;
+    lastModified?: Date;
+    lastModifiedBy?: string | undefined;
+}
+
+export class Level extends BaseAuditableEntity implements ILevel {
+    name?: string;
+    subjects?: Subject[];
+
+    constructor(data?: ILevel) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.name = _data["name"];
+            if (Array.isArray(_data["subjects"])) {
+                this.subjects = [] as any;
+                for (let item of _data["subjects"])
+                    this.subjects!.push(Subject.fromJS(item));
+            }
+        }
+    }
+
+    static override fromJS(data: any): Level {
+        data = typeof data === 'object' ? data : {};
+        let result = new Level();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        if (Array.isArray(this.subjects)) {
+            data["subjects"] = [];
+            for (let item of this.subjects)
+                data["subjects"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ILevel extends IBaseAuditableEntity {
+    name?: string;
+    subjects?: Subject[];
+}
+
+export class Subject extends BaseAuditableEntity implements ISubject {
+    name?: string;
+    levelId?: number;
+    level?: Level | undefined;
+    icon?: string;
+    chapters?: Chapter[] | undefined;
+
+    constructor(data?: ISubject) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.name = _data["name"];
+            this.levelId = _data["levelId"];
+            this.level = _data["level"] ? Level.fromJS(_data["level"]) : <any>undefined;
+            this.icon = _data["icon"];
+            if (Array.isArray(_data["chapters"])) {
+                this.chapters = [] as any;
+                for (let item of _data["chapters"])
+                    this.chapters!.push(Chapter.fromJS(item));
+            }
+        }
+    }
+
+    static override fromJS(data: any): Subject {
+        data = typeof data === 'object' ? data : {};
+        let result = new Subject();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["levelId"] = this.levelId;
+        data["level"] = this.level ? this.level.toJSON() : <any>undefined;
+        data["icon"] = this.icon;
+        if (Array.isArray(this.chapters)) {
+            data["chapters"] = [];
+            for (let item of this.chapters)
+                data["chapters"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ISubject extends IBaseAuditableEntity {
+    name?: string;
+    levelId?: number;
+    level?: Level | undefined;
+    icon?: string;
+    chapters?: Chapter[] | undefined;
+}
+
+export class Chapter extends BaseAuditableEntity implements IChapter {
+    title?: string;
+    subjectId?: number;
+    subject?: Subject | undefined;
+    exercises?: Exercise[];
+
+    constructor(data?: IChapter) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.title = _data["title"];
+            this.subjectId = _data["subjectId"];
+            this.subject = _data["subject"] ? Subject.fromJS(_data["subject"]) : <any>undefined;
+            if (Array.isArray(_data["exercises"])) {
+                this.exercises = [] as any;
+                for (let item of _data["exercises"])
+                    this.exercises!.push(Exercise.fromJS(item));
+            }
+        }
+    }
+
+    static override fromJS(data: any): Chapter {
+        data = typeof data === 'object' ? data : {};
+        let result = new Chapter();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["title"] = this.title;
+        data["subjectId"] = this.subjectId;
+        data["subject"] = this.subject ? this.subject.toJSON() : <any>undefined;
+        if (Array.isArray(this.exercises)) {
+            data["exercises"] = [];
+            for (let item of this.exercises)
+                data["exercises"].push(item.toJSON());
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IChapter extends IBaseAuditableEntity {
+    title?: string;
+    subjectId?: number;
+    subject?: Subject | undefined;
+    exercises?: Exercise[];
+}
+
+export class Exercise extends BaseAuditableEntity implements IExercise {
+    title?: string;
+    chapterId?: number;
+    chapter?: Chapter | undefined;
+    problemUrl?: string;
+    correctionUrl?: string;
+
+    constructor(data?: IExercise) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.title = _data["title"];
+            this.chapterId = _data["chapterId"];
+            this.chapter = _data["chapter"] ? Chapter.fromJS(_data["chapter"]) : <any>undefined;
+            this.problemUrl = _data["problemUrl"];
+            this.correctionUrl = _data["correctionUrl"];
+        }
+    }
+
+    static override fromJS(data: any): Exercise {
+        data = typeof data === 'object' ? data : {};
+        let result = new Exercise();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["title"] = this.title;
+        data["chapterId"] = this.chapterId;
+        data["chapter"] = this.chapter ? this.chapter.toJSON() : <any>undefined;
+        data["problemUrl"] = this.problemUrl;
+        data["correctionUrl"] = this.correctionUrl;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IExercise extends IBaseAuditableEntity {
+    title?: string;
+    chapterId?: number;
+    chapter?: Chapter | undefined;
+    problemUrl?: string;
+    correctionUrl?: string;
+}
+
+export abstract class BaseEvent implements IBaseEvent {
+
+    constructor(data?: IBaseEvent) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+    }
+
+    static fromJS(data: any): BaseEvent {
+        data = typeof data === 'object' ? data : {};
+        throw new Error("The abstract class 'BaseEvent' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        return data;
+    }
+}
+
+export interface IBaseEvent {
+}
+
+export class CreateLevelCommand implements ICreateLevelCommand {
+    name?: string;
+
+    constructor(data?: ICreateLevelCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): CreateLevelCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateLevelCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface ICreateLevelCommand {
+    name?: string;
 }
 
 export class PaginatedListOfTodoItemBriefDto implements IPaginatedListOfTodoItemBriefDto {

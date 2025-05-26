@@ -1,6 +1,7 @@
-﻿namespace CleanArchitecture.Web.Infrastructure;
-
-public abstract class EndpointGroupBase
+﻿namespace CleanArchitecture.Web.Infrastructure
 {
-    public abstract void Map(WebApplication app);
+    public abstract class EndpointGroupBase
+    {
+        public abstract void Map(WebApplication app);
+    }
 }

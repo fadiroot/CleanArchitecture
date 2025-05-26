@@ -1,18 +1,19 @@
-﻿namespace CleanArchitecture.Web.AcceptanceTests.Pages;
-
-public abstract class BasePage
+﻿namespace CleanArchitecture.Web.AcceptanceTests.Pages
 {
-    public static string BaseUrl => ConfigurationHelper.GetBaseUrl();
-
-    public abstract string PagePath { get; }
-
-    public abstract IBrowser Browser { get; }
-
-    public abstract IPage Page { get; set; }
-
-    public async Task GotoAsync()
+    public abstract class BasePage
     {
-        Page = await Browser.NewPageAsync();
-        await Page.GotoAsync(PagePath);
+        public static string BaseUrl => ConfigurationHelper.GetBaseUrl();
+
+        public abstract string PagePath { get; }
+
+        public abstract IBrowser Browser { get; }
+
+        public abstract IPage Page { get; set; }
+
+        public async Task GotoAsync()
+        {
+            Page = await Browser.NewPageAsync();
+            await Page.GotoAsync(PagePath);
+        }
     }
 }

@@ -1,6 +1,7 @@
-﻿namespace CleanArchitecture.Application.Common.Interfaces;
-
-public interface IUser
+﻿namespace CleanArchitecture.Application.Common.Interfaces
 {
-    string? Id { get; }
+    public interface IUser
+    {
+        string? Id { get; }
+    }
 }

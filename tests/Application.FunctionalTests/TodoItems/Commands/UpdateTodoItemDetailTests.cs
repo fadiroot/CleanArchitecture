@@ -5,53 +5,54 @@ using CleanArchitecture.Application.TodoLists.Commands.CreateTodoList;
 using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Domain.Enums;
 
-namespace CleanArchitecture.Application.FunctionalTests.TodoItems.Commands;
-
-using static Testing;
-
-public class UpdateTodoItemDetailTests : BaseTestFixture
+namespace CleanArchitecture.Application.FunctionalTests.TodoItems.Commands
 {
-    [Test]
-    public async Task ShouldRequireValidTodoItemId()
+    using static Testing;
+
+    public class UpdateTodoItemDetailTests : BaseTestFixture
     {
-        var command = new UpdateTodoItemCommand { Id = 99, Title = "New Title" };
-        await FluentActions.Invoking(() => SendAsync(command)).Should().ThrowAsync<NotFoundException>();
-    }
-
-    [Test]
-    public async Task ShouldUpdateTodoItem()
-    {
-        var userId = await RunAsDefaultUserAsync();
-
-        var listId = await SendAsync(new CreateTodoListCommand
+        [Test]
+        public async Task ShouldRequireValidTodoItemId()
         {
-            Title = "New List"
-        });
+            var command = new UpdateTodoItemCommand { Id = 99, Title = "New Title" };
+            await FluentActions.Invoking(() => SendAsync(command)).Should().ThrowAsync<NotFoundException>();
+        }
 
-        var itemId = await SendAsync(new CreateTodoItemCommand
+        [Test]
+        public async Task ShouldUpdateTodoItem()
         {
-            ListId = listId,
-            Title = "New Item"
-        });
+            var userId = await RunAsDefaultUserAsync();
 
-        var command = new UpdateTodoItemDetailCommand
-        {
-            Id = itemId,
-            ListId = listId,
-            Note = "This is the note.",
-            Priority = PriorityLevel.High
-        };
+            var listId = await SendAsync(new CreateTodoListCommand
+            {
+                Title = "New List"
+            });
 
-        await SendAsync(command);
+            var itemId = await SendAsync(new CreateTodoItemCommand
+            {
+                ListId = listId,
+                Title = "New Item"
+            });
 
-        var item = await FindAsync<TodoItem>(itemId);
+            var command = new UpdateTodoItemDetailCommand
+            {
+                Id = itemId,
+                ListId = listId,
+                Note = "This is the note.",
+                Priority = PriorityLevel.High
+            };
 
-        item.Should().NotBeNull();
-        item!.ListId.Should().Be(command.ListId);
-        item.Note.Should().Be(command.Note);
-        item.Priority.Should().Be(command.Priority);
-        item.LastModifiedBy.Should().NotBeNull();
-        item.LastModifiedBy.Should().Be(userId);
-        item.LastModified.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMilliseconds(10000));
+            await SendAsync(command);
+
+            var item = await FindAsync<TodoItem>(itemId);
+
+            item.Should().NotBeNull();
+            item!.ListId.Should().Be(command.ListId);
+            item.Note.Should().Be(command.Note);
+            item.Priority.Should().Be(command.Priority);
+            item.LastModifiedBy.Should().NotBeNull();
+            item.LastModifiedBy.Should().Be(userId);
+            item.LastModified.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMilliseconds(10000));
+        }
     }
 }

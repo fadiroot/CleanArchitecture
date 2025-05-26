@@ -1,16 +1,17 @@
 ﻿using System.Data.Common;
 
-namespace CleanArchitecture.Application.FunctionalTests;
-
-public interface ITestDatabase
+namespace CleanArchitecture.Application.FunctionalTests
 {
-    Task InitialiseAsync();
+    public interface ITestDatabase
+    {
+        Task InitialiseAsync();
 
-    DbConnection GetConnection();
+        DbConnection GetConnection();
 
-    string GetConnectionString();
+        string GetConnectionString();
 
-    Task ResetAsync();
+        Task ResetAsync();
 
-    Task DisposeAsync();
+        Task DisposeAsync();
+    }
 }

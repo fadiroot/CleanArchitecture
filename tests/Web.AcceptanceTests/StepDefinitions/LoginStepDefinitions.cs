@@ -1,80 +1,81 @@
-namespace CleanArchitecture.Web.AcceptanceTests.StepDefinitions;
-
-[Binding]
-public sealed class LoginStepDefinitions
+namespace CleanArchitecture.Web.AcceptanceTests.StepDefinitions
 {
-    private readonly LoginPage _loginPage;
-
-    public LoginStepDefinitions(LoginPage loginPage)
+    [Binding]
+    public sealed class LoginStepDefinitions
     {
-        _loginPage = loginPage;
-    }
+        private readonly LoginPage _loginPage;
 
-    [BeforeFeature("Login")]
-    public static async Task BeforeLoginScenario(IObjectContainer container)
-    {
-        var playwright = await Playwright.CreateAsync();
+        public LoginStepDefinitions(LoginPage loginPage)
+        {
+            _loginPage = loginPage;
+        }
 
-        var options = new BrowserTypeLaunchOptions();
+        [BeforeFeature("Login")]
+        public static async Task BeforeLoginScenario(IObjectContainer container)
+        {
+            var playwright = await Playwright.CreateAsync();
+
+            var options = new BrowserTypeLaunchOptions();
 
 
-        var browser = await playwright.Chromium.LaunchAsync(options);
+            var browser = await playwright.Chromium.LaunchAsync(options);
 
-        var page = await browser.NewPageAsync();
+            var page = await browser.NewPageAsync();
 
-        var loginPage = new LoginPage(browser, page);
+            var loginPage = new LoginPage(browser, page);
 
-        container.RegisterInstanceAs(playwright);
-        container.RegisterInstanceAs(browser);
-        container.RegisterInstanceAs(loginPage);
-    }
+            container.RegisterInstanceAs(playwright);
+            container.RegisterInstanceAs(browser);
+            container.RegisterInstanceAs(loginPage);
+        }
 
-    [Given("a logged out user")]
-    public async Task GivenALoggedOutUser()
-    {
-        await _loginPage.GotoAsync();
-    }
+        [Given("a logged out user")]
+        public async Task GivenALoggedOutUser()
+        {
+            await _loginPage.GotoAsync();
+        }
 
-    [When("the user logs in with valid credentials")]
-    public async Task TheUserLogsInWithValidCredentials()
-    {
-        await _loginPage.SetEmail("administrator@localhost");
-        await _loginPage.SetPassword("Administrator1!");
-        await _loginPage.ClickLogin();
-    }
+        [When("the user logs in with valid credentials")]
+        public async Task TheUserLogsInWithValidCredentials()
+        {
+            await _loginPage.SetEmail("administrator@localhost");
+            await _loginPage.SetPassword("Administrator1!");
+            await _loginPage.ClickLogin();
+        }
 
-    [Then("they log in successfully")]
-    public async Task TheyLogInSuccessfully()
-    {
-        var profileLinkText = await _loginPage.ProfileLinkText();
+        [Then("they log in successfully")]
+        public async Task TheyLogInSuccessfully()
+        {
+            var profileLinkText = await _loginPage.ProfileLinkText();
 
-        profileLinkText.Should().NotBeNull();
-        profileLinkText.Should().Be("Account");
-    }
+            profileLinkText.Should().NotBeNull();
+            profileLinkText.Should().Be("Account");
+        }
 
-    [When("the user logs in with invalid credentials")]
-    public async Task TheUserLogsInWithInvalidCredentials()
-    {
-        await _loginPage.SetEmail("hacker@localhost");
-        await _loginPage.SetPassword("l337hax!");
-        await _loginPage.ClickLogin();
-    }
+        [When("the user logs in with invalid credentials")]
+        public async Task TheUserLogsInWithInvalidCredentials()
+        {
+            await _loginPage.SetEmail("hacker@localhost");
+            await _loginPage.SetPassword("l337hax!");
+            await _loginPage.ClickLogin();
+        }
 
-    [Then("an error is displayed")]
-    public async Task AnErrorIsDisplayed()
-    {
-        var errorVisible = await _loginPage.InvalidLoginAttemptMessageVisible();
+        [Then("an error is displayed")]
+        public async Task AnErrorIsDisplayed()
+        {
+            var errorVisible = await _loginPage.InvalidLoginAttemptMessageVisible();
 
-        errorVisible.Should().BeTrue();
-    }
+            errorVisible.Should().BeTrue();
+        }
 
-    [AfterFeature]
-    public static async Task AfterScenario(IObjectContainer container)
-    {
-        var browser = container.Resolve<IBrowser>();
-        var playright = container.Resolve<IPlaywright>();
+        [AfterFeature]
+        public static async Task AfterScenario(IObjectContainer container)
+        {
+            var browser = container.Resolve<IBrowser>();
+            var playright = container.Resolve<IPlaywright>();
 
-        await browser.CloseAsync();
-        playright.Dispose();
+            await browser.CloseAsync();
+            playright.Dispose();
+        }
     }
 }

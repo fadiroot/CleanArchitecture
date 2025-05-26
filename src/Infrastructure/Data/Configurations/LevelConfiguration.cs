@@ -2,12 +2,13 @@ using CleanArchitecture.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CleanArchitecture.Infrastructure.Data.Configurations;
-
-public class LevelConfiguration : IEntityTypeConfiguration<Level>
+namespace CleanArchitecture.Infrastructure.Data.Configurations
 {
-    public void Configure(EntityTypeBuilder<Level> builder)
+    public class LevelConfiguration : IEntityTypeConfiguration<Level>
     {
-        builder.Property(l=>l.Name).HasMaxLength(100).IsRequired();
+        public void Configure(EntityTypeBuilder<Level> builder)
+        {
+            builder.Property(l=>l.Name).HasMaxLength(100).IsRequired();
+        }
     }
 }

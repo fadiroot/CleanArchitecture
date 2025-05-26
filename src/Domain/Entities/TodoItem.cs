@@ -1,31 +1,32 @@
-﻿namespace CleanArchitecture.Domain.Entities;
-
-public class TodoItem : BaseAuditableEntity
+﻿namespace CleanArchitecture.Domain.Entities
 {
-    public int ListId { get; set; }
-
-    public string? Title { get; set; }
-
-    public string? Note { get; set; }
-
-    public PriorityLevel Priority { get; set; }
-
-    public DateTime? Reminder { get; set; }
-
-    private bool _done;
-    public bool Done
+    public class TodoItem : BaseAuditableEntity
     {
-        get => _done;
-        set
+        public int ListId { get; set; }
+
+        public string? Title { get; set; }
+
+        public string? Note { get; set; }
+
+        public PriorityLevel Priority { get; set; }
+
+        public DateTime? Reminder { get; set; }
+
+        private bool _done;
+        public bool Done
         {
-            if (value && !_done)
+            get => _done;
+            set
             {
-                AddDomainEvent(new TodoItemCompletedEvent(this));
+                if (value && !_done)
+                {
+                    AddDomainEvent(new TodoItemCompletedEvent(this));
+                }
+
+                _done = value;
             }
-
-            _done = value;
         }
-    }
 
-    public TodoList List { get; set; } = null!;
+        public TodoList List { get; set; } = null!;
+    }
 }

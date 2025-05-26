@@ -3,36 +3,37 @@ using CleanArchitecture.Application.Common.Models;
 using CleanArchitecture.Application.Common.Security;
 using CleanArchitecture.Domain.Enums;
 
-namespace CleanArchitecture.Application.TodoLists.Queries.GetTodos;
-
-[Authorize]
-public record GetTodosQuery : IRequest<TodosVm>;
-
-public class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, TodosVm>
+namespace CleanArchitecture.Application.TodoLists.Queries.GetTodos
 {
-    private readonly IApplicationDbContext _context;
-    private readonly IMapper _mapper;
+    [Authorize]
+    public record GetTodosQuery : IRequest<TodosVm>;
 
-    public GetTodosQueryHandler(IApplicationDbContext context, IMapper mapper)
+    public class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, TodosVm>
     {
-        _context = context;
-        _mapper = mapper;
-    }
+        private readonly IApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-    public async Task<TodosVm> Handle(GetTodosQuery request, CancellationToken cancellationToken)
-    {
-        return new TodosVm
+        public GetTodosQueryHandler(IApplicationDbContext context, IMapper mapper)
         {
-            PriorityLevels = Enum.GetValues(typeof(PriorityLevel))
-                .Cast<PriorityLevel>()
-                .Select(p => new LookupDto { Id = (int)p, Title = p.ToString() })
-                .ToList(),
+            _context = context;
+            _mapper = mapper;
+        }
 
-            Lists = await _context.TodoLists
-                .AsNoTracking()
-                .ProjectTo<TodoListDto>(_mapper.ConfigurationProvider)
-                .OrderBy(t => t.Title)
-                .ToListAsync(cancellationToken)
-        };
+        public async Task<TodosVm> Handle(GetTodosQuery request, CancellationToken cancellationToken)
+        {
+            return new TodosVm
+            {
+                PriorityLevels = Enum.GetValues(typeof(PriorityLevel))
+                    .Cast<PriorityLevel>()
+                    .Select(p => new LookupDto { Id = (int)p, Title = p.ToString() })
+                    .ToList(),
+
+                Lists = await _context.TodoLists
+                    .AsNoTracking()
+                    .ProjectTo<TodoListDto>(_mapper.ConfigurationProvider)
+                    .OrderBy(t => t.Title)
+                    .ToListAsync(cancellationToken)
+            };
+        }
     }
 }

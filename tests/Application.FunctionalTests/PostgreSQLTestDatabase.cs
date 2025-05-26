@@ -6,70 +6,71 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using Respawn;
 
-namespace CleanArchitecture.Application.FunctionalTests;
-
-public class PostgreSQLTestDatabase : ITestDatabase
+namespace CleanArchitecture.Application.FunctionalTests
 {
-    private readonly string _connectionString = null!;
-    private NpgsqlConnection _connection = null!;
-    private Respawner _respawner = null!;
-
-    public PostgreSQLTestDatabase()
+    public class PostgreSQLTestDatabase : ITestDatabase
     {
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json")
-            .AddEnvironmentVariables()
-            .Build();
+        private readonly string _connectionString = null!;
+        private NpgsqlConnection _connection = null!;
+        private Respawner _respawner = null!;
 
-        var connectionString = configuration.GetConnectionString("CleanArchitectureDb");
-
-        Guard.Against.Null(connectionString);
-
-        _connectionString = connectionString;
-    }
-
-    public async Task InitialiseAsync()
-    {
-        _connection = new NpgsqlConnection(_connectionString);
-
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(_connectionString)
-            .ConfigureWarnings(warnings => warnings.Log(RelationalEventId.PendingModelChangesWarning))
-            .Options;
-
-        var context = new ApplicationDbContext(options);
-
-        context.Database.EnsureDeleted();
-        context.Database.Migrate();
-
-        await _connection.OpenAsync();
-        _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
+        public PostgreSQLTestDatabase()
         {
-            DbAdapter = DbAdapter.Postgres,
-            TablesToIgnore = ["__EFMigrationsHistory"]
-        });
-        await _connection.CloseAsync();
-    }
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
+                .Build();
 
-    public DbConnection GetConnection()
-    {
-        return _connection;
-    }
+            var connectionString = configuration.GetConnectionString("CleanArchitectureDb");
 
-    public string GetConnectionString()
-    {
-        return _connectionString;
-    }
+            Guard.Against.Null(connectionString);
 
-    public async Task ResetAsync()
-    {
-        await _connection.OpenAsync();
-        await _respawner.ResetAsync(_connection);
-        await _connection.CloseAsync();
-    }
+            _connectionString = connectionString;
+        }
 
-    public async Task DisposeAsync()
-    {
-        await _connection.DisposeAsync();
+        public async Task InitialiseAsync()
+        {
+            _connection = new NpgsqlConnection(_connectionString);
+
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(_connectionString)
+                .ConfigureWarnings(warnings => warnings.Log(RelationalEventId.PendingModelChangesWarning))
+                .Options;
+
+            var context = new ApplicationDbContext(options);
+
+            context.Database.EnsureDeleted();
+            context.Database.Migrate();
+
+            await _connection.OpenAsync();
+            _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                TablesToIgnore = ["__EFMigrationsHistory"]
+            });
+            await _connection.CloseAsync();
+        }
+
+        public DbConnection GetConnection()
+        {
+            return _connection;
+        }
+
+        public string GetConnectionString()
+        {
+            return _connectionString;
+        }
+
+        public async Task ResetAsync()
+        {
+            await _connection.OpenAsync();
+            await _respawner.ResetAsync(_connection);
+            await _connection.CloseAsync();
+        }
+
+        public async Task DisposeAsync()
+        {
+            await _connection.DisposeAsync();
+        }
     }
 }

@@ -2,25 +2,26 @@
 using CleanArchitecture.Application.Common.Security;
 using CleanArchitecture.Domain.Constants;
 
-namespace CleanArchitecture.Application.TodoLists.Commands.PurgeTodoLists;
-
-[Authorize(Roles = Roles.Administrator)]
-[Authorize(Policy = Policies.CanPurge)]
-public record PurgeTodoListsCommand : IRequest;
-
-public class PurgeTodoListsCommandHandler : IRequestHandler<PurgeTodoListsCommand>
+namespace CleanArchitecture.Application.TodoLists.Commands.PurgeTodoLists
 {
-    private readonly IApplicationDbContext _context;
+    [Authorize(Roles = Roles.Administrator)]
+    [Authorize(Policy = Policies.CanPurge)]
+    public record PurgeTodoListsCommand : IRequest;
 
-    public PurgeTodoListsCommandHandler(IApplicationDbContext context)
+    public class PurgeTodoListsCommandHandler : IRequestHandler<PurgeTodoListsCommand>
     {
-        _context = context;
-    }
+        private readonly IApplicationDbContext _context;
 
-    public async Task Handle(PurgeTodoListsCommand request, CancellationToken cancellationToken)
-    {
-        _context.TodoLists.RemoveRange(_context.TodoLists);
+        public PurgeTodoListsCommandHandler(IApplicationDbContext context)
+        {
+            _context = context;
+        }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        public async Task Handle(PurgeTodoListsCommand request, CancellationToken cancellationToken)
+        {
+            _context.TodoLists.RemoveRange(_context.TodoLists);
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

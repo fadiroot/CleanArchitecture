@@ -1,27 +1,28 @@
 ﻿using CleanArchitecture.Domain.Entities;
 
-namespace CleanArchitecture.Application.TodoLists.Queries.GetTodos;
-
-public class TodoListDto
+namespace CleanArchitecture.Application.TodoLists.Queries.GetTodos
 {
-    public TodoListDto()
+    public class TodoListDto
     {
-        Items = Array.Empty<TodoItemDto>();
-    }
-
-    public int Id { get; init; }
-
-    public string? Title { get; init; }
-
-    public string? Colour { get; init; }
-
-    public IReadOnlyCollection<TodoItemDto> Items { get; init; }
-
-    private class Mapping : Profile
-    {
-        public Mapping()
+        public TodoListDto()
         {
-            CreateMap<TodoList, TodoListDto>();
+            Items = Array.Empty<TodoItemDto>();
+        }
+
+        public int Id { get; init; }
+
+        public string? Title { get; init; }
+
+        public string? Colour { get; init; }
+
+        public IReadOnlyCollection<TodoItemDto> Items { get; init; }
+
+        private class Mapping : Profile
+        {
+            public Mapping()
+            {
+                CreateMap<TodoList, TodoListDto>();
+            }
         }
     }
 }

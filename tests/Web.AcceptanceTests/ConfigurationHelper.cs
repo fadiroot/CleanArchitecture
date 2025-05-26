@@ -1,32 +1,33 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace CleanArchitecture.Web.AcceptanceTests;
-
-public static class ConfigurationHelper
+namespace CleanArchitecture.Web.AcceptanceTests
 {
-    private readonly static IConfiguration _configuration;
-
-    static ConfigurationHelper()
+    public static class ConfigurationHelper
     {
-        _configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json")
-            .AddEnvironmentVariables()
-            .Build();
-    }
+        private readonly static IConfiguration _configuration;
 
-    private static string? _baseUrl;
-
-    public static string GetBaseUrl()
-    {
-        if (_baseUrl == null)
+        static ConfigurationHelper()
         {
-            _baseUrl = _configuration["BaseUrl"];
-
-            ArgumentNullException.ThrowIfNull(_baseUrl);
-
-            _baseUrl = _baseUrl.TrimEnd('/');
+            _configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
+                .Build();
         }
 
-        return _baseUrl;
+        private static string? _baseUrl;
+
+        public static string GetBaseUrl()
+        {
+            if (_baseUrl == null)
+            {
+                _baseUrl = _configuration["BaseUrl"];
+
+                ArgumentNullException.ThrowIfNull(_baseUrl);
+
+                _baseUrl = _baseUrl.TrimEnd('/');
+            }
+
+            return _baseUrl;
+        }
     }
 }

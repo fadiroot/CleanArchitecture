@@ -9,35 +9,36 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace CleanArchitecture.Application.FunctionalTests;
-
-using static Testing;
-
-public class CustomWebApplicationFactory : WebApplicationFactory<Program>
+namespace CleanArchitecture.Application.FunctionalTests
 {
-    private readonly DbConnection _connection;
-    private readonly string _connectionString;
+    using static Testing;
 
-    public CustomWebApplicationFactory(DbConnection connection, string connectionString)
+    public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
-        _connection = connection;
-        _connectionString = connectionString;
-    }
+        private readonly DbConnection _connection;
+        private readonly string _connectionString;
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.ConfigureTestServices(services =>
+        public CustomWebApplicationFactory(DbConnection connection, string connectionString)
         {
-            services
-                .RemoveAll<IUser>()
-                .AddTransient(provider => Mock.Of<IUser>(s => s.Id == GetUserId()));
-            services
-                .RemoveAll<DbContextOptions<ApplicationDbContext>>()
-                .AddDbContext<ApplicationDbContext>((sp, options) =>
-                {
-                    options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-                    options.UseNpgsql(_connection);
-                });
-        });
+            _connection = connection;
+            _connectionString = connectionString;
+        }
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services
+                    .RemoveAll<IUser>()
+                    .AddTransient(provider => Mock.Of<IUser>(s => s.Id == GetUserId()));
+                services
+                    .RemoveAll<DbContextOptions<ApplicationDbContext>>()
+                    .AddDbContext<ApplicationDbContext>((sp, options) =>
+                    {
+                        options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+                        options.UseNpgsql(_connection);
+                    });
+            });
+        }
     }
 }

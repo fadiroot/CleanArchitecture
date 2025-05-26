@@ -2,53 +2,54 @@
 using CleanArchitecture.Application.TodoLists.Commands.CreateTodoList;
 using CleanArchitecture.Domain.Entities;
 
-namespace CleanArchitecture.Application.FunctionalTests.TodoLists.Commands;
-
-using static Testing;
-
-public class CreateTodoListTests : BaseTestFixture
+namespace CleanArchitecture.Application.FunctionalTests.TodoLists.Commands
 {
-    [Test]
-    public async Task ShouldRequireMinimumFields()
+    using static Testing;
+
+    public class CreateTodoListTests : BaseTestFixture
     {
-        var command = new CreateTodoListCommand();
-        await FluentActions.Invoking(() => SendAsync(command)).Should().ThrowAsync<ValidationException>();
-    }
-
-    [Test]
-    public async Task ShouldRequireUniqueTitle()
-    {
-        await SendAsync(new CreateTodoListCommand
+        [Test]
+        public async Task ShouldRequireMinimumFields()
         {
-            Title = "Shopping"
-        });
+            var command = new CreateTodoListCommand();
+            await FluentActions.Invoking(() => SendAsync(command)).Should().ThrowAsync<ValidationException>();
+        }
 
-        var command = new CreateTodoListCommand
+        [Test]
+        public async Task ShouldRequireUniqueTitle()
         {
-            Title = "Shopping"
-        };
+            await SendAsync(new CreateTodoListCommand
+            {
+                Title = "Shopping"
+            });
 
-        await FluentActions.Invoking(() =>
-            SendAsync(command)).Should().ThrowAsync<ValidationException>();
-    }
+            var command = new CreateTodoListCommand
+            {
+                Title = "Shopping"
+            };
 
-    [Test]
-    public async Task ShouldCreateTodoList()
-    {
-        var userId = await RunAsDefaultUserAsync();
+            await FluentActions.Invoking(() =>
+                SendAsync(command)).Should().ThrowAsync<ValidationException>();
+        }
 
-        var command = new CreateTodoListCommand
+        [Test]
+        public async Task ShouldCreateTodoList()
         {
-            Title = "Tasks"
-        };
+            var userId = await RunAsDefaultUserAsync();
 
-        var id = await SendAsync(command);
+            var command = new CreateTodoListCommand
+            {
+                Title = "Tasks"
+            };
 
-        var list = await FindAsync<TodoList>(id);
+            var id = await SendAsync(command);
 
-        list.Should().NotBeNull();
-        list!.Title.Should().Be(command.Title);
-        list.CreatedBy.Should().Be(userId);
-        list.Created.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMilliseconds(10000));
+            var list = await FindAsync<TodoList>(id);
+
+            list.Should().NotBeNull();
+            list!.Title.Should().Be(command.Title);
+            list.CreatedBy.Should().Be(userId);
+            list.Created.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMilliseconds(10000));
+        }
     }
 }

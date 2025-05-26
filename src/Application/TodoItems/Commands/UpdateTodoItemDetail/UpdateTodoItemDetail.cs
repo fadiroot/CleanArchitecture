@@ -1,39 +1,40 @@
 ﻿using CleanArchitecture.Application.Common.Interfaces;
 using CleanArchitecture.Domain.Enums;
 
-namespace CleanArchitecture.Application.TodoItems.Commands.UpdateTodoItemDetail;
-
-public record UpdateTodoItemDetailCommand : IRequest
+namespace CleanArchitecture.Application.TodoItems.Commands.UpdateTodoItemDetail
 {
-    public int Id { get; init; }
-
-    public int ListId { get; init; }
-
-    public PriorityLevel Priority { get; init; }
-
-    public string? Note { get; init; }
-}
-
-public class UpdateTodoItemDetailCommandHandler : IRequestHandler<UpdateTodoItemDetailCommand>
-{
-    private readonly IApplicationDbContext _context;
-
-    public UpdateTodoItemDetailCommandHandler(IApplicationDbContext context)
+    public record UpdateTodoItemDetailCommand : IRequest
     {
-        _context = context;
+        public int Id { get; init; }
+
+        public int ListId { get; init; }
+
+        public PriorityLevel Priority { get; init; }
+
+        public string? Note { get; init; }
     }
 
-    public async Task Handle(UpdateTodoItemDetailCommand request, CancellationToken cancellationToken)
+    public class UpdateTodoItemDetailCommandHandler : IRequestHandler<UpdateTodoItemDetailCommand>
     {
-        var entity = await _context.TodoItems
-            .FindAsync(new object[] { request.Id }, cancellationToken);
+        private readonly IApplicationDbContext _context;
 
-        Guard.Against.NotFound(request.Id, entity);
+        public UpdateTodoItemDetailCommandHandler(IApplicationDbContext context)
+        {
+            _context = context;
+        }
 
-        entity.ListId = request.ListId;
-        entity.Priority = request.Priority;
-        entity.Note = request.Note;
+        public async Task Handle(UpdateTodoItemDetailCommand request, CancellationToken cancellationToken)
+        {
+            var entity = await _context.TodoItems
+                .FindAsync(new object[] { request.Id }, cancellationToken);
 
-        await _context.SaveChangesAsync(cancellationToken);
+            Guard.Against.NotFound(request.Id, entity);
+
+            entity.ListId = request.ListId;
+            entity.Priority = request.Priority;
+            entity.Note = request.Note;
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

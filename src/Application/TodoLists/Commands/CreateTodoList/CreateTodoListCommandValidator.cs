@@ -1,26 +1,27 @@
 ﻿using CleanArchitecture.Application.Common.Interfaces;
 
-namespace CleanArchitecture.Application.TodoLists.Commands.CreateTodoList;
-
-public class CreateTodoListCommandValidator : AbstractValidator<CreateTodoListCommand>
+namespace CleanArchitecture.Application.TodoLists.Commands.CreateTodoList
 {
-    private readonly IApplicationDbContext _context;
-
-    public CreateTodoListCommandValidator(IApplicationDbContext context)
+    public class CreateTodoListCommandValidator : AbstractValidator<CreateTodoListCommand>
     {
-        _context = context;
+        private readonly IApplicationDbContext _context;
 
-        RuleFor(v => v.Title)
-            .NotEmpty()
-            .MaximumLength(200)
-            .MustAsync(BeUniqueTitle)
+        public CreateTodoListCommandValidator(IApplicationDbContext context)
+        {
+            _context = context;
+
+            RuleFor(v => v.Title)
+                .NotEmpty()
+                .MaximumLength(200)
+                .MustAsync(BeUniqueTitle)
                 .WithMessage("'{PropertyName}' must be unique.")
                 .WithErrorCode("Unique");
-    }
+        }
 
-    public async Task<bool> BeUniqueTitle(string title, CancellationToken cancellationToken)
-    {
-        return !await _context.TodoLists
-            .AnyAsync(l => l.Title == title, cancellationToken);
+        public async Task<bool> BeUniqueTitle(string title, CancellationToken cancellationToken)
+        {
+            return !await _context.TodoLists
+                .AnyAsync(l => l.Title == title, cancellationToken);
+        }
     }
 }

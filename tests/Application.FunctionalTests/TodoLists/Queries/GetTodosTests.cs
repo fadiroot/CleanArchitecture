@@ -2,60 +2,61 @@
 using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Domain.ValueObjects;
 
-namespace CleanArchitecture.Application.FunctionalTests.TodoLists.Queries;
-
-using static Testing;
-
-public class GetTodosTests : BaseTestFixture
+namespace CleanArchitecture.Application.FunctionalTests.TodoLists.Queries
 {
-    [Test]
-    public async Task ShouldReturnPriorityLevels()
+    using static Testing;
+
+    public class GetTodosTests : BaseTestFixture
     {
-        await RunAsDefaultUserAsync();
-
-        var query = new GetTodosQuery();
-
-        var result = await SendAsync(query);
-
-        result.PriorityLevels.Should().NotBeEmpty();
-    }
-
-    [Test]
-    public async Task ShouldReturnAllListsAndItems()
-    {
-        await RunAsDefaultUserAsync();
-
-        await AddAsync(new TodoList
+        [Test]
+        public async Task ShouldReturnPriorityLevels()
         {
-            Title = "Shopping",
-            Colour = Colour.Blue,
-            Items =
-                    {
-                        new TodoItem { Title = "Apples", Done = true },
-                        new TodoItem { Title = "Milk", Done = true },
-                        new TodoItem { Title = "Bread", Done = true },
-                        new TodoItem { Title = "Toilet paper" },
-                        new TodoItem { Title = "Pasta" },
-                        new TodoItem { Title = "Tissues" },
-                        new TodoItem { Title = "Tuna" }
-                    }
-        });
+            await RunAsDefaultUserAsync();
 
-        var query = new GetTodosQuery();
+            var query = new GetTodosQuery();
 
-        var result = await SendAsync(query);
+            var result = await SendAsync(query);
 
-        result.Lists.Should().HaveCount(1);
-        result.Lists.First().Items.Should().HaveCount(7);
-    }
+            result.PriorityLevels.Should().NotBeEmpty();
+        }
 
-    [Test]
-    public async Task ShouldDenyAnonymousUser()
-    {
-        var query = new GetTodosQuery();
+        [Test]
+        public async Task ShouldReturnAllListsAndItems()
+        {
+            await RunAsDefaultUserAsync();
 
-        var action = () => SendAsync(query);
+            await AddAsync(new TodoList
+            {
+                Title = "Shopping",
+                Colour = Colour.Blue,
+                Items =
+                {
+                    new TodoItem { Title = "Apples", Done = true },
+                    new TodoItem { Title = "Milk", Done = true },
+                    new TodoItem { Title = "Bread", Done = true },
+                    new TodoItem { Title = "Toilet paper" },
+                    new TodoItem { Title = "Pasta" },
+                    new TodoItem { Title = "Tissues" },
+                    new TodoItem { Title = "Tuna" }
+                }
+            });
+
+            var query = new GetTodosQuery();
+
+            var result = await SendAsync(query);
+
+            result.Lists.Should().HaveCount(1);
+            result.Lists.First().Items.Should().HaveCount(7);
+        }
+
+        [Test]
+        public async Task ShouldDenyAnonymousUser()
+        {
+            var query = new GetTodosQuery();
+
+            var action = () => SendAsync(query);
         
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+            await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        }
     }
 }

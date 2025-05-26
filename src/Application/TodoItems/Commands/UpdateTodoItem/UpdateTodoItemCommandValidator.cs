@@ -1,11 +1,12 @@
-﻿namespace CleanArchitecture.Application.TodoItems.Commands.UpdateTodoItem;
-
-public class UpdateTodoItemCommandValidator : AbstractValidator<UpdateTodoItemCommand>
+﻿namespace CleanArchitecture.Application.TodoItems.Commands.UpdateTodoItem
 {
-    public UpdateTodoItemCommandValidator()
+    public class UpdateTodoItemCommandValidator : AbstractValidator<UpdateTodoItemCommand>
     {
-        RuleFor(v => v.Title)
-            .MaximumLength(200)
-            .NotEmpty();
+        public UpdateTodoItemCommandValidator()
+        {
+            RuleFor(v => v.Title)
+                .MaximumLength(200)
+                .NotEmpty();
+        }
     }
 }

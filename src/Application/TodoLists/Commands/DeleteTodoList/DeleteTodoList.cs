@@ -1,28 +1,29 @@
 ﻿using CleanArchitecture.Application.Common.Interfaces;
 
-namespace CleanArchitecture.Application.TodoLists.Commands.DeleteTodoList;
-
-public record DeleteTodoListCommand(int Id) : IRequest;
-
-public class DeleteTodoListCommandHandler : IRequestHandler<DeleteTodoListCommand>
+namespace CleanArchitecture.Application.TodoLists.Commands.DeleteTodoList
 {
-    private readonly IApplicationDbContext _context;
+    public record DeleteTodoListCommand(int Id) : IRequest;
 
-    public DeleteTodoListCommandHandler(IApplicationDbContext context)
+    public class DeleteTodoListCommandHandler : IRequestHandler<DeleteTodoListCommand>
     {
-        _context = context;
-    }
+        private readonly IApplicationDbContext _context;
 
-    public async Task Handle(DeleteTodoListCommand request, CancellationToken cancellationToken)
-    {
-        var entity = await _context.TodoLists
-            .Where(l => l.Id == request.Id)
-            .SingleOrDefaultAsync(cancellationToken);
+        public DeleteTodoListCommandHandler(IApplicationDbContext context)
+        {
+            _context = context;
+        }
 
-        Guard.Against.NotFound(request.Id, entity);
+        public async Task Handle(DeleteTodoListCommand request, CancellationToken cancellationToken)
+        {
+            var entity = await _context.TodoLists
+                .Where(l => l.Id == request.Id)
+                .SingleOrDefaultAsync(cancellationToken);
 
-        _context.TodoLists.Remove(entity);
+            Guard.Against.NotFound(request.Id, entity);
 
-        await _context.SaveChangesAsync(cancellationToken);
+            _context.TodoLists.Remove(entity);
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

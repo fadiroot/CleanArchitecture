@@ -8,75 +8,76 @@ using Npgsql;
 using Respawn;
 using Testcontainers.PostgreSql;
 
-namespace CleanArchitecture.Application.FunctionalTests;
-
-public class PostgreSQLTestcontainersTestDatabase : ITestDatabase
+namespace CleanArchitecture.Application.FunctionalTests
 {
-    private const string DefaultDatabase = "CleanArchitectureTestDb";
-    private readonly PostgreSqlContainer _container;
-    private DbConnection _connection = null!;
-    private string _connectionString = null!;
-    private Respawner _respawner = null!;
-
-    public PostgreSQLTestcontainersTestDatabase()
+    public class PostgreSQLTestcontainersTestDatabase : ITestDatabase
     {
-        _container = new PostgreSqlBuilder()
-            .WithAutoRemove(true)
-            .Build();
-    }
+        private const string DefaultDatabase = "CleanArchitectureTestDb";
+        private readonly PostgreSqlContainer _container;
+        private DbConnection _connection = null!;
+        private string _connectionString = null!;
+        private Respawner _respawner = null!;
 
-    public async Task InitialiseAsync()
-    {
-        await _container.StartAsync();
-        await _container.ExecScriptAsync($"CREATE DATABASE {DefaultDatabase}");
-
-        var builder = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
+        public PostgreSQLTestcontainersTestDatabase()
         {
-            Database = DefaultDatabase
-        };
+            _container = new PostgreSqlBuilder()
+                .WithAutoRemove(true)
+                .Build();
+        }
 
-        _connectionString = builder.ConnectionString;
-
-        _connection = new NpgsqlConnection(_connectionString);
-
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(_connectionString)
-            .ConfigureWarnings(warnings => warnings.Log(RelationalEventId.PendingModelChangesWarning))
-            .Options;
-
-        var context = new ApplicationDbContext(options);
-
-        await context.Database.MigrateAsync();
-
-        await _connection.OpenAsync();
-        _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
+        public async Task InitialiseAsync()
         {
-            DbAdapter = DbAdapter.Postgres,
-            TablesToIgnore = ["__EFMigrationsHistory"]
-        });
-        await _connection.CloseAsync();
-    }
+            await _container.StartAsync();
+            await _container.ExecScriptAsync($"CREATE DATABASE {DefaultDatabase}");
 
-    public DbConnection GetConnection()
-    {
-        return _connection;
-    }
+            var builder = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
+            {
+                Database = DefaultDatabase
+            };
 
-    public string GetConnectionString()
-    {
-        return _connectionString;
-    }
+            _connectionString = builder.ConnectionString;
 
-    public async Task ResetAsync()
-    {
-        await _connection.OpenAsync();
-        await _respawner.ResetAsync(_connection);
-        await _connection.CloseAsync();
-    }
+            _connection = new NpgsqlConnection(_connectionString);
 
-    public async Task DisposeAsync()
-    {
-        await _connection.DisposeAsync();
-        await _container.DisposeAsync();
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(_connectionString)
+                .ConfigureWarnings(warnings => warnings.Log(RelationalEventId.PendingModelChangesWarning))
+                .Options;
+
+            var context = new ApplicationDbContext(options);
+
+            await context.Database.MigrateAsync();
+
+            await _connection.OpenAsync();
+            _respawner = await Respawner.CreateAsync(_connection, new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                TablesToIgnore = ["__EFMigrationsHistory"]
+            });
+            await _connection.CloseAsync();
+        }
+
+        public DbConnection GetConnection()
+        {
+            return _connection;
+        }
+
+        public string GetConnectionString()
+        {
+            return _connectionString;
+        }
+
+        public async Task ResetAsync()
+        {
+            await _connection.OpenAsync();
+            await _respawner.ResetAsync(_connection);
+            await _connection.CloseAsync();
+        }
+
+        public async Task DisposeAsync()
+        {
+            await _connection.DisposeAsync();
+            await _container.DisposeAsync();
+        }
     }
 }
