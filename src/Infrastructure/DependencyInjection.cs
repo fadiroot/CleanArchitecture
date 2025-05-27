@@ -26,17 +26,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
                 options.UseNpgsql(connectionString).AddAsyncSeeding(sp);
             });
-
-
+            
+            
             builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-
             builder.Services.AddScoped<ApplicationDbContextInitialiser>();
-
             builder.Services
                 .AddDefaultIdentity<ApplicationUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
-
+            
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddTransient<IIdentityService, IdentityService>();
 

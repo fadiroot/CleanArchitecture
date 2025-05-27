@@ -8,7 +8,6 @@ namespace CleanArchitecture.Domain.Entities
         private Level(string name , ICollection<Subject>? subjects)
         {
             Name = name;
-            Subjects = subjects ?? new List<Subject>();
         }
 
         public static Level Create(string name , ICollection<Subject>? subjects = null)
@@ -16,10 +15,9 @@ namespace CleanArchitecture.Domain.Entities
             return new (name, subjects);
         }
 
-        public static Level Update(Level level, string name, ICollection<Subject>? subjects = null)
+        public static Level Update(Level level, string name)
         {
             level.Name = name;
-            level.Subjects = subjects ?? new List<Subject>();
             return level;
         } 
     
